@@ -1,0 +1,23 @@
+{
+  "name": "mikoide",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "core",
+    "renderer",       
+    "quickpreview"  
+  ],
+  "scripts": {
+    "build": "bun run build:core && bun run build:renderer && bun run build:release",
+    "build:core": "bun --cwd mikoeditor run build",
+    "build:renderer": "bun --cwd renderer run build",
+    "build:release": "cmake --build build --config Release",
+    "build:debug": "cmake --build build --config Debug",
+    "dev": "bun --cwd renderer run dev",
+    "preview": "bun --cwd quickpreview run dev",
+    "clean": "rm -rf build renderer/dist mikoeditor/dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}

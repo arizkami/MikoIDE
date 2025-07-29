@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { MikoEditor, createEditor, typescriptLanguage, javascriptLanguage, pythonLanguage, rustLanguage, cppLanguage } from '../../mikoeditor';
-import type { EditorOptions, Language } from '../../mikoeditor';
+import { MikoEditor, createEditor, typescriptLanguage, javascriptLanguage, pythonLanguage, rustLanguage, cppLanguage } from '../../core';
+import type { EditorOptions, Language } from '../../core';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import TabBar from './components/TabBar';

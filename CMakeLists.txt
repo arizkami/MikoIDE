@@ -132,7 +132,7 @@ add_executable(${PROJECT_NAME} WIN32
     app/config.cpp
     app/logger.cpp
     app/client.cpp
-    app/appplication.cpp
+    app/application.cpp
 )
 
 # Set target properties using CEF macros

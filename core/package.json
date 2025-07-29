@@ -1,5 +1,5 @@
 {
-  "name": "mikoeditor",
+  "name": "@mikoide/core",
   "version": "1.0.0",
   "description": "A modern, extensible code editor framework",
   "main": "dist/index.js",
