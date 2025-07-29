@@ -129,10 +129,10 @@ endif()
 # Add executable as Windows application (no console)
 add_executable(${PROJECT_NAME} WIN32
     app/main.cpp
-    app/config.cpp
-    app/logger.cpp
-    app/client.cpp
-    app/application.cpp
+    app/core/config.cpp
+    app/core/logger.cpp
+    app/core/client.cpp
+    app/core/app.cpp
 )
 
 # Set target properties using CEF macros

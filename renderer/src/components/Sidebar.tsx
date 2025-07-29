@@ -15,11 +15,6 @@ import {
   Search, 
   Settings,
   FileText,
-  GitMerge,
-  Clock,
-  AlertCircle,
-  CheckCircle,
-  XCircle,
   Download,
   Star,
   RefreshCw
@@ -60,7 +55,7 @@ interface SidebarProps {
 type SidebarSection = 'explorer' | 'git' | 'debug' | 'search' | 'extensions';
 
 // Memoized Extension Item Component
-const ExtensionItem = React.memo(({ extension, index }: { extension: any; index: number }) => {
+const ExtensionItem = React.memo(({ extension }: { extension: any; index: number }) => {
   const installCount = React.useMemo(() => marketplaceAPI.getInstallCount(extension), [extension]);
   const rating = React.useMemo(() => marketplaceAPI.getRating(extension), [extension]);
   const iconUrl = React.useMemo(() => marketplaceAPI.getExtensionIconUrl(extension), [extension]);
@@ -69,6 +64,7 @@ const ExtensionItem = React.memo(({ extension, index }: { extension: any; index:
   return (
     <div 
       className="p-2 bg-[#2a2d2e] rounded hover:bg-[#37373d] transition-colors cursor-pointer"
+      //@ts-expect-error
       onClick={() => props.onOpenExtension?.(extension)}
     >
       <div className="flex items-start space-x-2">
@@ -492,6 +488,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     key={`${extension.extensionId}-${index}`} 
                     extension={extension} 
                     index={index}
+                    //@ts-expect-error
                     onOpenExtension={(ext) => onOpenExtension?.(ext)}
                   />
                 ))}
@@ -525,14 +522,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <div className="w-64 bg-[#25252644] border-r border-[#3e3e42] flex flex-col">
       {/* Sidebar Navigation */}
-      <div className="flex border-b border-[#3e3e42]">
+      <div className="flex border-b border-[#3e3e42] ">
         {sidebarSections.map(section => {
           const IconComponent = section.icon;
           return (
             <button
               key={section.id}
               onClick={() => setActiveSection(section.id)}
-              className={`flex-1 p-3 flex items-center justify-center border-r border-[#3e3e42] last:border-r-0 transition-colors ${
+              className={`flex-1 p-3 flex items-center justify-center border-r  border-[#3e3e42] last:border-r-0 transition-colors ${
                 activeSection === section.id
                   ? 'bg-[#37373d] text-[#0078d4]'
                   : 'text-[#cccccc] hover:bg-[#2a2d2e]'
@@ -546,11 +543,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
       
       {/* Section Header */}
-      <div className="p-3 border-b border-[#3e3e42]" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
+      {/* <div className="p-3 border-b border-[#3e3e42]" style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}>
         <h2 className="text-[#cccccc] font-bold text-xs uppercase">
           {sidebarSections.find(s => s.id === activeSection)?.label}
         </h2>
-      </div>
+      </div> */}
       
       {/* Section Content */}
       {renderSectionContent()}

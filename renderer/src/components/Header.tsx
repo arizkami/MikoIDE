@@ -200,7 +200,7 @@ const Header: React.FC<HeaderProps> = ({
                         <img src="https://avatars.githubusercontent.com/u/99713905?v=4" alt="arizkami" className="w-6 h-6 rounded-full" />
                     </button>
                 </div>
-                <div className='pr-33' />
+                {/* <div className='pr-33' /> */}
             </div>
         </div>
     );
