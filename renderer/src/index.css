@@ -194,3 +194,76 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #4f4f4f;
 }
+
+/* Smooth scrolling for editor components */
+.editor-content,
+.line-numbers,
+.syntax-highlight {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: #4a5568 #2d3748;
+}
+
+/* Custom scrollbar styling for webkit browsers */
+.editor-content::-webkit-scrollbar,
+.line-numbers::-webkit-scrollbar,
+.syntax-highlight::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.editor-content::-webkit-scrollbar-track,
+.line-numbers::-webkit-scrollbar-track,
+.syntax-highlight::-webkit-scrollbar-track {
+  background: #2d3748;
+}
+
+.editor-content::-webkit-scrollbar-thumb,
+.line-numbers::-webkit-scrollbar-thumb,
+.syntax-highlight::-webkit-scrollbar-thumb {
+  background: #4a5568;
+  border-radius: 4px;
+}
+
+.editor-content::-webkit-scrollbar-thumb:hover,
+.line-numbers::-webkit-scrollbar-thumb:hover,
+.syntax-highlight::-webkit-scrollbar-thumb:hover {
+  background: #718096;
+}
+
+/* Add these styles for better editor synchronization */
+.syntax-highlight {
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.editor-content {
+  will-change: scroll-position;
+}
+
+.line-numbers {
+  will-change: scroll-position;
+}
+
+/* Ensure consistent scrollbar styling */
+.editor-content::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.editor-content::-webkit-scrollbar-track {
+  background: #161b22;
+}
+
+.editor-content::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 6px;
+}
+
+.editor-content::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
+
+.editor-content::-webkit-scrollbar-corner {
+  background: #161b22;
+}

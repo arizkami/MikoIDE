@@ -1,5 +1,6 @@
-#include "sandbox.hpp"
+#include "extension-sandbox.hpp"
 #include "../core/logger.hpp"
+#include "../utils/terminal.hpp"
 #include <fstream>
 #include <sstream>
 
@@ -8,6 +9,7 @@ namespace MikoIDE {
         
         ExtensionSandbox::ExtensionSandbox() : initialized_(false) {
             extension_manager_ = std::make_unique<ExtensionManager>();
+            v8_manager_ = std::make_unique<V8ContextManager>();
         }
         
         ExtensionSandbox::~ExtensionSandbox() {
@@ -26,9 +28,15 @@ namespace MikoIDE {
                     return false;
                 }
                 
-                SetupV8Context();
-                CreateSandboxGlobals();
+                // Initialize V8 context manager
+                if (!v8_manager_->Initialize()) {
+                    Logger::LogMessage("Failed to initialize V8 context manager");
+                    return false;
+                }
+                
+                v8_manager_->CreateSandboxGlobals();
                 RegisterExtensionAPIs();
+                RegisterTerminalAPIs();
                 
                 initialized_ = true;
                 Logger::LogMessage("Extension sandbox initialized successfully");
@@ -59,113 +67,32 @@ namespace MikoIDE {
         }
         
         bool ExtensionSandbox::ExecuteScript(const std::string& script) {
-            if (!initialized_ || !v8_context_) {
+            if (!initialized_ || !v8_manager_) {
                 return false;
             }
             
-            CefRefPtr<CefV8Value> retval;
-            CefRefPtr<CefV8Exception> exception;
-            
-            bool success = v8_context_->Eval(script, CefString(), 0, retval, exception);
-            
-            if (!success && exception) {
-                Logger::LogMessage("Script execution failed: " + exception->GetMessage().ToString());
-                return false;
-            }
-            
-            return success;
+            return v8_manager_->ExecuteScript(script);
         }
         
         void ExtensionSandbox::RegisterNativeFunction(const std::string& name, 
                                                      std::function<void(const std::vector<std::string>&)> callback) {
             native_functions_[name] = callback;
             
-            if (v8_context_) {
-                CefRefPtr<CefV8Value> global = v8_context_->GetGlobal();
+            if (v8_manager_ && v8_manager_->IsInitialized()) {
                 CefRefPtr<NativeFunctionHandler> handler = new NativeFunctionHandler(this);
-                CefRefPtr<CefV8Value> func = CefV8Value::CreateFunction(name, handler);
-                global->SetValue(name, func, V8_PROPERTY_ATTRIBUTE_NONE);
+                v8_manager_->RegisterFunction(name, handler);
             }
         }
         
         void ExtensionSandbox::Cleanup() {
-            if (v8_context_) {
-                v8_context_ = nullptr;
+            if (v8_manager_) {
+                v8_manager_->Cleanup();
             }
             native_functions_.clear();
             initialized_ = false;
         }
         
-        void ExtensionSandbox::SetupV8Context() {
-            // This would typically be called from a CEF render process
-            // For now, we'll set up a basic context
-            if (CefV8Context::InContext()) {
-                v8_context_ = CefV8Context::GetCurrentContext();
-            }
-        }
-        
-        void ExtensionSandbox::CreateSandboxGlobals() {
-            if (!v8_context_) {
-                return;
-            }
-            
-            CefRefPtr<CefV8Value> global = v8_context_->GetGlobal();
-            
-            // Create console object
-            CefRefPtr<CefV8Value> console = CefV8Value::CreateObject(nullptr, nullptr);
-            
-            // Add console.log function
-            CefRefPtr<NativeFunctionHandler> handler = new NativeFunctionHandler(this);
-            CefRefPtr<CefV8Value> logFunc = CefV8Value::CreateFunction("log", handler);
-            console->SetValue("log", logFunc, V8_PROPERTY_ATTRIBUTE_NONE);
-            
-            global->SetValue("console", console, V8_PROPERTY_ATTRIBUTE_NONE);
-            
-            // Register console.log as a native function
-            RegisterNativeFunction("log", [](const std::vector<std::string>& args) {
-                std::string message = "Console: ";
-                for (const auto& arg : args) {
-                    message += arg + " ";
-                }
-                Logger::LogMessage(message);
-            });
-        }
-        
-        // NativeFunctionHandler implementation
-        NativeFunctionHandler::NativeFunctionHandler(ExtensionSandbox* sandbox) 
-            : sandbox_(sandbox) {
-        }
-        
-        bool NativeFunctionHandler::Execute(const CefString& name,
-                                           CefRefPtr<CefV8Value> object,
-                                           const CefV8ValueList& arguments,
-                                           CefRefPtr<CefV8Value>& retval,
-                                           CefString& exception) {
-            
-            std::string funcName = name.ToString();
-            auto it = sandbox_->GetNativeFunctions().find(funcName);
-            
-            if (it != sandbox_->GetNativeFunctions().end()) {
-                std::vector<std::string> args;
-                for (const auto& arg : arguments) {
-                    if (arg->IsString()) {
-                        args.push_back(arg->GetStringValue().ToString());
-                    }
-                }
-                
-                try {
-                    it->second(args);
-                    retval = CefV8Value::CreateUndefined();
-                    return true;
-                } catch (const std::exception& e) {
-                    exception = CefString(e.what());
-                    return false;
-                }
-            }
-            
-            return false;
-        }
-        
+        // Extension management methods
         bool ExtensionSandbox::InstallExtensionFromVSIX(const std::string& vsixPath) {
             if (!initialized_ || !extension_manager_) {
                 return false;
@@ -201,7 +128,6 @@ namespace MikoIDE {
             return extension_manager_->SetExtensionActive(extensionId, false);
         }
         
-        // Add to RegisterExtensionAPIs() method
         void ExtensionSandbox::RegisterExtensionAPIs() {
             // Register extension management functions for JavaScript
             RegisterNativeFunction("installExtension", [this](const std::vector<std::string>& args) {
@@ -225,7 +151,9 @@ namespace MikoIDE {
                     Logger::LogMessage("- " + ext.name + " (" + ext.id + ") - " + (ext.isActive ? "Active" : "Inactive"));
                 }
             });
-            
+        }
+        
+        void ExtensionSandbox::RegisterTerminalAPIs() {
             // Terminal management functions
             RegisterNativeFunction("createTerminal", [this](const std::vector<std::string>& args) {
                 std::string command = args.size() > 0 ? args[0] : "";
@@ -238,21 +166,21 @@ namespace MikoIDE {
             RegisterNativeFunction("sendTerminalInput", [this](const std::vector<std::string>& args) {
                 if (args.size() >= 2) {
                     bool success = Utils::Terminal::GetInstance().SendInput(args[0], args[1]);
-                    Logger::LogMessage("Terminal input sent: " + (success ? "success" : "failed"));
+                    Logger::LogMessage(std::string("Terminal input sent: ") + (success ? "success" : "failed"));
                 }
             });
             
             RegisterNativeFunction("sendTerminalCommand", [this](const std::vector<std::string>& args) {
                 if (args.size() >= 2) {
                     bool success = Utils::Terminal::GetInstance().SendCommand(args[0], args[1]);
-                    Logger::LogMessage("Terminal command sent: " + (success ? "success" : "failed"));
+                    Logger::LogMessage(std::string("Terminal command sent: ") + (success ? "success" : "failed"));
                 }
             });
             
             RegisterNativeFunction("closeTerminal", [this](const std::vector<std::string>& args) {
                 if (!args.empty()) {
                     bool success = Utils::Terminal::GetInstance().CloseTerminal(args[0]);
-                    Logger::LogMessage("Terminal closed: " + (success ? "success" : "failed"));
+                    Logger::LogMessage(std::string("Terminal closed: ") + (success ? "success" : "failed"));
                 }
             });
             
@@ -262,7 +190,7 @@ namespace MikoIDE {
                     int cols = std::stoi(args[1]);
                     int rows = std::stoi(args[2]);
                     bool success = Utils::Terminal::GetInstance().ResizeTerminal(terminalId, cols, rows);
-                    Logger::LogMessage("Terminal resized: " + (success ? "success" : "failed"));
+                    Logger::LogMessage(std::string("Terminal resized: ") + (success ? "success" : "failed"));
                 }
             });
             
@@ -270,16 +198,17 @@ namespace MikoIDE {
             Utils::Terminal::GetInstance().SetGlobalOutputCallback(
                 [this](const std::string& terminalId, const Utils::TerminalMessage& msg) {
                     // Forward terminal output to frontend via CEF
-                    if (v8_context_) {
+                    if (v8_manager_ && v8_manager_->IsInitialized()) {
                         // Create JavaScript event for terminal output
                         std::string script = "if (window.onTerminalOutput) { window.onTerminalOutput('" + 
                             terminalId + "', '" + 
                             (msg.type == Utils::TerminalMessage::OUTPUT ? "output" : 
-                             msg.type == Utils::TerminalMessage::ERROR ? "error" : "exit") + "', '" +
+                             (msg.type == Utils::TerminalMessage::ERROR ? "error" : "exit")) + "', '" +
                             msg.data + "', " + std::to_string(msg.exitCode) + "); }";
-                        ExecuteScript(script);
+                        v8_manager_->ExecuteScript(script);
                     }
                 }
             );
         }
+    }
 }

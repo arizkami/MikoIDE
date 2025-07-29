@@ -17,10 +17,13 @@ import {
   FileText,
   Download,
   Star,
-  RefreshCw
+  RefreshCw,
+  Package // Added for package manager
 } from 'lucide-react';
 import { useExtensions } from './mktapi/useExtensions';
 import { marketplaceAPI } from './mktapi';
+import PackageManager from './packagemanager/PackageManager';
+import type { Toolchain } from './packagemanager/PackageManager'; // Added import
 import type { VSCodeExtension } from './mktapi';
 
 interface FileTab {
@@ -50,9 +53,12 @@ interface SidebarProps {
   onNewFile?: () => void;
   onNewFolder?: () => void;
   onOpenExtension?: (extension: VSCodeExtension) => void;
+  onInstallToolchain?: (toolchain: Toolchain) => void; // Added
+  onUninstallToolchain?: (toolchain: Toolchain) => void; // Added
 }
 
-type SidebarSection = 'explorer' | 'git' | 'debug' | 'search' | 'extensions';
+// Updated type to include package manager
+type SidebarSection = 'explorer' | 'git' | 'debug' | 'search' | 'extensions' | 'packages';
 
 // Memoized Extension Item Component
 const ExtensionItem = React.memo(({ extension }: { extension: any; index: number }) => {
@@ -130,7 +136,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   onTabSelect, 
   onNewFile, 
   onNewFolder,
-  onOpenExtension
+  onOpenExtension,
+  onInstallToolchain, // Added
+  onUninstallToolchain // Added
 }) => {
   const [activeSection, setActiveSection] = React.useState<SidebarSection>('explorer');
   const [expandedFolders, setExpandedFolders] = React.useState<Set<string>>(new Set(['root']));
@@ -192,12 +200,14 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
+  // Updated sidebar sections to include package manager
   const sidebarSections = [
     { id: 'explorer' as SidebarSection, icon: Folder, label: 'Explorer' },
     { id: 'git' as SidebarSection, icon: GitBranch, label: 'Source Control' },
     { id: 'debug' as SidebarSection, icon: Bug, label: 'Debug' },
     { id: 'search' as SidebarSection, icon: Search, label: 'Search' },
-    { id: 'extensions' as SidebarSection, icon: Settings, label: 'Extensions' }
+    { id: 'extensions' as SidebarSection, icon: Settings, label: 'Extensions' },
+    { id: 'packages' as SidebarSection, icon: Package, label: 'Package Manager' } // Added
   ];
 
   const renderExplorerSection = () => (
@@ -506,6 +516,14 @@ const Sidebar: React.FC<SidebarProps> = ({
     );
   }
 
+  // Added package manager render function
+  const renderPackageManagerSection = () => (
+    <PackageManager 
+      onInstall={onInstallToolchain}
+      onUninstall={onUninstallToolchain}
+    />
+  );
+
   const renderSectionContent = () => {
     switch (activeSection) {
       case 'explorer': return renderExplorerSection();
@@ -513,6 +531,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       case 'debug': return renderDebugSection();
       case 'search': return renderSearchSection();
       case 'extensions': return renderExtensionsSection();
+      case 'packages': return renderPackageManagerSection(); // Added
       default: return renderExplorerSection();
     }
   };

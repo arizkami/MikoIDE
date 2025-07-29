@@ -1,0 +1,11 @@
+{
+    "name": "MikoIDE",
+    "version": "1.0.0", 
+    "description": "MikoIDE is a modern, lightweight IDE built from scratch using cutting-edge web technologies and native C++ performance",
+    "library": {
+        "cef": "138.0.27",
+        "chromium": "138.0.7204.158",
+        "react": "19.2.0",
+        "tailwind": "4.1"
+    }
+}

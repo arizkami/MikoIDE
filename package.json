@@ -58,7 +58,7 @@
     "backend:run": "cd build && ./mikoide-backend",
     "backend:debug": "cd build && gdb ./mikoide-backend",
     "dev:core": "bun --cwd core run dev",
-    "dev:renderer": "bun --cwd renderer run dev",
+    "dev:renderer": "bun --cwd=renderer run dev",
     "dev:preview": "bun --cwd quickpreview run dev",
     "dev:all": "bun run --parallel dev:core dev:renderer dev:preview",
     

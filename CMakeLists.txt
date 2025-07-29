@@ -133,6 +133,11 @@ add_executable(${PROJECT_NAME} WIN32
     app/core/logger.cpp
     app/core/client.cpp
     app/core/app.cpp
+    app/sandbox/extension-sandbox.cpp
+    app/sandbox/native-function-handler.cpp
+    app/sandbox/v8-context-manager.cpp
+    app/sandbox/sandbox.cpp
+    app/utils/terminal.cpp
 )
 
 # Set target properties using CEF macros
