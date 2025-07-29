@@ -1,0 +1,44 @@
+{
+  "name": "mikoeditor",
+  "version": "1.0.0",
+  "description": "A modern, extensible code editor framework",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun run build:lib",
+    "build:lib": "bun build index.ts --outdir dist --target node --format esm --sourcemap && bun run build:types",
+    "build:types": "tsc --emitDeclarationOnly --outDir dist",
+    "dev": "bun run example/index.tsx",
+    "preview": "bun run --hot example/index.tsx",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "bun run clean && bun run build"
+  },
+  "keywords": [
+    "editor",
+    "code-editor",
+    "syntax-highlighting",
+    "typescript",
+    "javascript"
+  ],
+  "author": "MikoIDE",
+  "license": "MIT",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5",
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
