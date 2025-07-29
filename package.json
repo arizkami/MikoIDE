@@ -1,0 +1,168 @@
+{
+  "name": "mikoide",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Mikoide - Advanced Editor with Preview and Development Tools",
+  "keywords": ["editor", "development", "preview", "tools"],
+  "workspaces": [
+    "core",
+    "renderer",       
+    "quickpreview",
+    "tools/grit"
+  ],
+  "scripts": {
+    "build": "bun run build:parallel && bun run generate",
+    "build:parallel": "bun run --parallel build:core build:renderer",
+    "build:core": "bun --cwd core run build",
+    "build:renderer": "bun --cwd renderer run build",
+    "build:preview": "bun --cwd quickpreview run build",
+    "build:all": "bun run build:parallel && bun run build:preview",
+    "build:backend": "bun run backend:build:release",
+    "build:backend:debug": "bun run cmake:configure:debug && bun run backend:build:debug",
+    "build:backend:release": "bun run cmake:configure:release && bun run backend:build:release",
+    "build:full": "bun run build:all && bun run build:backend",
+    "build:full:debug": "bun run build:all && bun run build:backend:debug",
+    "build:full:release": "bun run build:all && bun run build:backend:release",
+    
+    "cmake:configure": "cmake -B build -S .",
+    "cmake:configure:debug": "cmake -B build -S . -DCMAKE_BUILD_TYPE=Debug",
+    "cmake:configure:release": "cmake -B build -S . -DCMAKE_BUILD_TYPE=Release",
+    "cmake:configure:ninja": "cmake -B build -S . -G Ninja",
+    "cmake:configure:vs": "cmake -B build -S . -G \"Visual Studio 17 2022\"",
+    
+    "backend:build": "cmake --build build",
+    "backend:build:debug": "cmake --build build --config Debug",
+    "backend:build:release": "cmake --build build --config Release",
+    "backend:build:parallel": "cmake --build build --parallel",
+    "backend:build:verbose": "cmake --build build --verbose",
+    "backend:build:clean": "cmake --build build --target clean",
+    
+    "backend:install": "cmake --install build",
+    "backend:install:debug": "cmake --install build --config Debug",
+    "backend:install:release": "cmake --install build --config Release",
+    "backend:install:prefix": "cmake --install build --prefix ./install",
+    
+    "backend:test": "cd build && ctest",
+    "backend:test:verbose": "cd build && ctest --verbose",
+    "backend:test:parallel": "cd build && ctest --parallel",
+    "backend:test:output": "cd build && ctest --output-on-failure",
+    
+    "backend:package": "cd build && cpack",
+    "backend:package:deb": "cd build && cpack -G DEB",
+    "backend:package:rpm": "cd build && cpack -G RPM",
+    "backend:package:zip": "cd build && cpack -G ZIP",
+    "backend:package:dmg": "cd build && cpack -G DragNDrop",
+
+    "dev:full": "bun run --parallel dev:renderer dev:preview backend:watch",
+    "dev:backend": "bun run backend:build:debug && bun run backend:run",
+    "backend:watch": "nodemon --watch src --ext cpp,hpp,c,h --exec \"bun run backend:build:debug\"",
+    "backend:run": "cd build && ./mikoide-backend",
+    "backend:debug": "cd build && gdb ./mikoide-backend",
+    "dev:core": "bun --cwd core run dev",
+    "dev:renderer": "bun --cwd renderer run dev",
+    "dev:preview": "bun --cwd quickpreview run dev",
+    "dev:all": "bun run --parallel dev:core dev:renderer dev:preview",
+    
+    "generate": "bun --cwd tools/grit run generate.ts",
+    "generate:watch": "bun --cwd tools/grit run generate.ts --watch",
+    
+    "test": "bun run test:all",
+    "test:all": "bun run --parallel test:core test:renderer",
+    "test:core": "bun --cwd core run test",
+    "test:renderer": "bun --cwd renderer run test",
+    "test:watch": "bun run --parallel test:core:watch test:renderer:watch",
+    "test:core:watch": "bun --cwd core run test:watch",
+    "test:renderer:watch": "bun --cwd renderer run test:watch",
+    "test:preview:watch": "bun --cwd quickpreview run test:watch",
+    
+    "lint": "bun run lint:all",
+    "lint:all": "bun run --parallel lint:core lint:renderer lint:tools",
+    "lint:core": "bun --cwd core run lint",
+    "lint:renderer": "bun --cwd renderer run lint",
+    "lint:tools": "bun --cwd tools/grit run lint",
+    "lint:fix": "bun run --parallel lint:core:fix lint:renderer:fix lint:tools:fix",
+    "lint:core:fix": "bun --cwd core run lint:fix",
+    "lint:renderer:fix": "bun --cwd renderer run lint:fix",
+    "lint:preview:fix": "bun --cwd quickpreview run lint:fix",
+    "lint:tools:fix": "bun --cwd tools/grit run lint:fix",
+
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,css,scss,html}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,css,scss,html}\"",
+    
+    "typecheck": "bun run typecheck:all",
+    "typecheck:all": "bun run --parallel typecheck:core typecheck:renderer typecheck:preview typecheck:tools",
+    "typecheck:core": "bun --cwd core run typecheck",
+    "typecheck:renderer": "bun --cwd renderer run typecheck",
+    "typecheck:preview": "bun --cwd quickpreview run typecheck",
+    "typecheck:tools": "bun --cwd tools/grit run typecheck",
+    
+    "clean": "bun run clean:all",
+    "clean:backend": "rm -rf build install",
+    "clean:all": "bun run clean:frontend && bun run clean:backend && bun run clean:cache",
+    "clean:frontend": "rm -rf renderer/dist core/dist quickpreview/dist tools/grit/dist",
+    "clean:build": "rm -rf build",
+    "clean:dist": "rm -rf */dist **/dist",
+    "clean:node_modules": "rm -rf node_modules */node_modules **/node_modules",
+    "clean:cache": "rm -rf node_modules/.cache .turbo",
+
+    "install:all": "bun install && bun run install:workspaces",
+    "install:workspaces": "bun install --cwd core && bun install --cwd renderer && bun install --cwd quickpreview && bun install --cwd tools/grit",
+    
+
+    "preview": "bun --cwd quickpreview run dev",
+    "serve": "bun --cwd renderer run preview",
+    "serve:core": "bun --cwd core run serve",
+    
+    "docs:build": "typedoc",
+    "docs:serve": "bun run docs:build && python -m http.server 8080 -d docs",
+    
+    "prebuild": "bun run clean && bun run typecheck && bun run lint && bun run test",
+    "release": "bun run prebuild && bun run build:full:release && bun run backend:test && bun run backend:package",
+    "release:debug": "bun run prebuild && bun run build:full:debug && bun run backend:test",
+    "release:quick": "bun run build:full:release",
+
+    "watch": "bun run --parallel watch:core watch:renderer watch:preview",
+    "watch:core": "bun --cwd core run watch",
+    "watch:renderer": "bun --cwd renderer run watch",
+    "watch:preview": "bun --cwd quickpreview run watch",
+
+    "health": "bun run typecheck && bun run lint && bun run test && bun run backend:test",
+    "health:frontend": "bun run typecheck && bun run lint && bun run test",
+    "health:backend": "bun run backend:build:debug && bun run backend:test",
+    "ci": "bun run health && bun run build:full:release"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-import": "^2.30.0",
+    "husky": "^9.1.0",
+    "lint-staged": "16.1.2",
+    "nodemon": "^3.1.0",
+    "prettier": "^3.3.0",
+    "typedoc": "0.28.8",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=21.0.0",
+    "bun": ">=1.0.0"
+  },
+  "packageManager": "bun@1.1.0",
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,css,scss,html}": [
+      "prettier --write"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "bun run health"
+    }
+  }
+}
