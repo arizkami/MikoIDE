@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Circle } from 'lucide-react';
+import { X, Circle, Package } from 'lucide-react';
 
 interface FileTab {
   id: string;
@@ -7,6 +7,8 @@ interface FileTab {
   language: { id: string; name: string };
   content: string;
   isDirty: boolean;
+  type?: 'file' | 'extension';
+  extensionData?: any;
 }
 
 interface TabBarProps {
@@ -24,8 +26,16 @@ const TabBar: React.FC<TabBarProps> = ({ tabs, activeTabId, onTabSelect, onTabCl
       case 'python': return 'bg-[#3776ab]';
       case 'rust': return 'bg-[#ce422b]';
       case 'cpp': return 'bg-[#00599c]';
+      case 'extension': return 'bg-[#fd7e14]';
       default: return 'bg-[#858585]';
     }
+  };
+
+  const getTabIcon = (tab: FileTab) => {
+    if (tab.type === 'extension') {
+      return <Package size={8} className="text-[#fd7e14]" />;
+    }
+    return <div className={`w-2 h-2 rounded-full ${getLanguageColor(tab.language.id)}`} />;
   };
   
   return (
@@ -40,7 +50,7 @@ const TabBar: React.FC<TabBarProps> = ({ tabs, activeTabId, onTabSelect, onTabCl
           }`}
           onClick={() => onTabSelect(tab.id)}
         >
-          <div className={`w-2 h-2 rounded-full ${getLanguageColor(tab.language.id)}`} />
+          {getTabIcon(tab)}
           <span className="text-xs truncate max-w-32">{tab.name}</span>
           
           {tab.isDirty ? (

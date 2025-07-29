@@ -178,8 +178,8 @@ body {
 }
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+  width: 2px;
+  height: 2px;
 }
 
 ::-webkit-scrollbar-track {
@@ -187,8 +187,8 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #424242;
-  border-radius: 6px;
+  background: #a8a8a8;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {

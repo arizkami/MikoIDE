@@ -5,6 +5,8 @@ import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import TabBar from './components/TabBar';
 import StatusBar from './components/StatusBar';
+import ExtensionPage from './components/ExtensionPage';
+import type { VSCodeExtension } from './components/mktapi';
 
 interface FileTab {
   id: string;
@@ -12,6 +14,8 @@ interface FileTab {
   language: Language;
   content: string;
   isDirty: boolean;
+  type?: 'file' | 'extension';
+  extensionData?: VSCodeExtension;
 }
 
 function App() {
@@ -37,7 +41,8 @@ export default function MyApp() {
     </div>
   );
 }`,
-      isDirty: false
+      isDirty: false,
+      type: 'file'
     }
   ]);
 
@@ -349,6 +354,62 @@ export default function MyApp() {
 
   const stats = getStats();
 
+  const openExtensionTab = (extension: VSCodeExtension) => {
+    const extensionTabId = `ext-${extension.extensionId}`;
+    
+    // Check if tab already exists
+    const existingTab = tabs.find(tab => tab.id === extensionTabId);
+    if (existingTab) {
+      setActiveTabId(extensionTabId);
+      return;
+    }
+
+    // Create new extension tab
+    const newTab: FileTab = {
+      id: extensionTabId,
+      name: extension.displayName,
+      language: {
+        id: 'extension',
+        name: 'Extension',
+        extensions: ['.vsix'],
+        keywords: [],
+        operators: [],
+        delimiters: [],
+        commentTokens: {
+          line: '//',
+          block: { start: '/*', end: '*/' }
+        }
+      },
+      content: '',
+      isDirty: false,
+      type: 'extension',
+      extensionData: extension
+    };
+
+    setTabs(prev => [...prev, newTab]);
+    setActiveTabId(extensionTabId);
+  };
+
+  const renderTabContent = () => {
+    const activeTab = tabs.find(tab => tab.id === activeTabId);
+    
+    if (!activeTab) return null;
+    
+    if (activeTab.type === 'extension' && activeTab.extensionData) {
+      return <ExtensionPage extension={activeTab.extensionData} />;
+    }
+    
+    // Render normal editor for file tabs
+    return (
+      <div className="flex-1 relative overflow-hidden">
+        <div
+          ref={editorRef}
+          className="absolute inset-0 bg-[#0d1117]"
+        />
+      </div>
+    );
+  };
+
   return (
     <>
       <style>{`
@@ -361,6 +422,7 @@ export default function MyApp() {
           tabs={tabs}
           activeTabId={activeTabId}
           onTabSelect={setActiveTabId}
+          onOpenExtension={openExtensionTab}
         />
         
         {/* Main content area - vertical layout */}
@@ -382,13 +444,8 @@ export default function MyApp() {
               onTabClose={closeTab}
             />
 
-            {/* Editor container - this is where the text editor should appear */}
-            <div className="flex-1 relative overflow-hidden">
-              <div
-                ref={editorRef}
-                className="absolute inset-0 bg-[#0d1117]"
-              />
-            </div>
+            {/* Content container */}
+            {renderTabContent()}
           </div>
           
           {/* Status bar at bottom */}

@@ -16,7 +16,7 @@ interface StatusBarProps {
 
 const StatusBar: React.FC<StatusBarProps> = ({ activeFile, stats }) => {
   return (
-    <div className="h-6 bg-[#111115] text-white flex items-center justify-between px-4 text-xs">
+    <div className="h-6 bg-[#111115] text-white flex items-center justify-between px-4 text-xs border-t border-[#3E3E42]">
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-1">
           <GitBranch size={12} />
